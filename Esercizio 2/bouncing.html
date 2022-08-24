@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>Bouncing</title>
+        <script type="text/javascript">
+            
+            var maxBoxSize = 50;
+            var minBoxSize = 25;
+            var maxVelocity = 6;
+            var minVelocity = 3;
+            
+            var w; //world
+            var boxes = new Array()
+            var index = 0;
+            
+            function randomSign(){
+                var sign = Math.random();
+                
+                if(sign>=0.5) return sign = 1;
+                else return sign = -1;
+            }
+			
+            function randomNumber(max, min){
+                return Math.floor(Math.random() * (max - min + 1) + min);
+            }
+
+            function randomColor() {
+                  var letters = '0123456789ABCDEF';
+                  var color = '#';
+                
+                  for (var i = 0; i < 6; i++) {
+                    color += letters[Math.floor(Math.random() * 16)];
+                  }
+                  return color;
+            }
+
+			function changeDirection(a, b) {
+				if(a.dx * b.dx <= 0){ //vanno uno contro l'altro lungo x
+					a.dx *= -1;
+					b.dx *= -1;
+				}
+				else{
+					var temp=a.dx
+					a.dx = b.dx
+					b.dx = temp
+				}
+				if(a.dy * b.dy <= 0){ //vanno uno contro l'altro lungo y
+					a.dy *= -1;
+					b.dy *= -1;
+				}
+				else{
+					var temp=a.dy
+					a.dy = b.dy
+					b.dy = temp
+				}
+			}
+			
+			//check se un angolo di a e' in b
+            function isCollide(a, b) {
+				var p11 = isInternal(a.X, a.Y, b) //controlla se l'angolo in altro a sx 
+				var p12 = isInternal(a.X + a.sz + 8, a.Y, b)
+				var p21 = isInternal(a.X, a.Y + a.sz + 8, b)
+				var p22 = isInternal(a.X + a.sz, a.Y + a.sz + 8, b)
+				
+				return p11 || p12 || p21 || p22
+            }
+			
+			//check se (x,y) si trova dentro la box a
+			function isInternal(x ,y, box) {
+				return (x > box.X) && (x < box.X + box.sz) && (y > box.Y) && (y < box.Y + box.sz)
+            }
+            
+            //aggiorna la posizione delle box
+            function makeBounce() {
+                for (var i = 0; i < boxes.length; i++)
+                              boxes[i].UpdateBox()
+            }
+            function Box(x, y, dx, dy, index) {
+                var b = document.createElement('div')
+                var sz = randomNumber(maxBoxSize, minBoxSize);
+                w.appendChild(b)
+                b.style.width = sz + 'px'
+                b.style.height = sz + 'px'
+                b.style.background = randomColor()
+                b.style.position = 'absolute'
+                
+                this.X = x
+                this.Y = y
+                this.dx = dx
+                this.dy = dy
+                this.sz = sz
+                this.Element = b
+                
+                this.UpdateBox = function () {
+                    b.style.left = this.X + 'px'
+                    b.style.top = this.Y + 'px'
+      
+                    while(this.X + sz > w.offsetWidth){
+                        this.X--;      
+                    }
+
+                    while(this.Y + sz > w.offsetHeight){
+                        this.Y--;
+                    }
+					
+                    //world collision check
+                    if (this.X + sz + 2 > w.offsetWidth || this.X + 2 <= 0) this.dx *= -1
+                    if (this.Y + sz + 2 > w.offsetHeight || this.Y + 2 <= 0) this.dy *= -1
+                    
+              
+                    for(var i = 0; i < boxes.length; i++){
+						if(this != boxes[i]){
+                            if(isCollide(this, boxes[i])) changeDirection(this, boxes[i])
+						}
+                    }
+  
+                    this.X += this.dx
+                    this.Y += this.dy
+                    
+                    if ( this.Y <=0 ) {this.Y=2; this.dy *= -1}
+                    if ( this.X <=0 ) {this.X=2; this.dx *= -1}
+		            if ( this.X >= w.offsetWidth )  {this.X=w.offsetWidth-t; this.dx *= -1}
+                    if ( this.Y >= w.offsetHeight ) {this.Y=w.offsetHeight-t; this.dy *= -1}
+                }
+				
+				this.DestroyBox = function () {
+					b.remove();
+				}
+            }
+
+            window.addEventListener('load', function () {
+                w = document.getElementById('world')
+                var t = null;
+                w.addEventListener('click', function (e) {
+					var canCreate = true;
+					
+					var box = new Box(
+						e.offsetX, 
+						e.offsetY, 
+						randomSign()* randomNumber(maxVelocity, minVelocity), 
+						randomSign()* randomNumber(maxVelocity, minVelocity),
+					);
+					
+					if(boxes.length>=1){
+						for(var i=0; i < boxes.length; i++){
+							if(isCollide(box, boxes[i])){
+								canCreate = false;
+								break;
+							}
+						}
+					}
+                
+					if(!canCreate){
+						box.DestroyBox();
+						return true;
+					}
+					boxes.push(box);
+					
+					if (!t) {
+						t = setInterval(function () {
+						makeBounce();
+						}, 20)
+					}
+                })
+            })
+        </script>
+    </head>
+    <body>
+        <h1>Aggiungi quadrati cliccando nel mondo.</h1>
+		<p>NOTA BENE: il quadrato non viene creato se clicchi sopra a un quadrato esistente</p>
+        <p>Remo Andreoli 2018</p>
+        <div id="world" style="background: yellow; width:50%; height: 50%; position: absolute">
+        </div>
+    </body>
+</html>

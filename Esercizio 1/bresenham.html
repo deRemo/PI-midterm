@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html>
+    <body>
+        <h1>
+            Fare refresh pagina
+        </h1>
+        <p>Remo Andreoli 2018</p>
+        <canvas id="myCanvas" width="500" height="500" style="border:1px solid #d3d3d3;">
+            Your browser does not support the HTML5 canvas tag.
+        </canvas>
+
+        <script type="text/javascript">
+			var canvas;
+			var ctx;
+			var dim=1;
+			var min=0;
+			var max=0;
+
+			function loader(){
+				canvas=document.getElementById("myCanvas");
+				ctx=canvas.getContext("2d");
+				max=canvas.width;
+
+				var xi = randomNumber();
+				var yi = randomNumber();
+				
+				var xf = randomNumber();
+				var yf = randomNumber();
+				
+				bresenhamLine(xi,yi,xf,yf);
+			}
+
+			function randomNumber(){
+				return Math.floor(Math.random() * (max - min + 1)) + min;
+			}
+
+			function bresenhamLine(xi,yi,xf,yf){
+				var swap = 0;
+				var DX = xf - xi;
+				var DY = yf - yi;
+
+				//equivale a verificare se abs(m)>1, se true devo scambiare x e y
+				if (Math.abs(DX) < Math.abs(DY)) {
+					var tmp=DX;
+					DX=DY;
+					DY=tmp;
+					
+					swap = 1;
+				}
+
+				var a = Math.abs(DY);
+				var b = -Math.abs(DX);
+
+				var x = xi;
+				var y = yi;
+
+				//valore decisionale iniziale (d=f(xi,yi)) moltiplicato per 2 per semplificare i calcoli
+				var d = 2 * a + b;
+
+				//incrementatore/decrementatore di x e y, dipende dai punti iniziali
+				var q = (xi > xf) ? -1 : 1;
+				var s = (yi > yf) ? -1 : 1;
+				
+				drawP(xi, yi);
+				//mi serve per identificare qual e' il punto iniziale
+				showInitialPoint(xi, yi);
+				drawP(xf, yf);
+				
+				
+				while(x != xf || y != yf){
+					if (d > 0) {
+						x= x + q; 
+						y= y + s;
+						
+						d= d + 2 * (a + b);
+					}
+					else {
+						//se |m|>1 sono switchati x e y, quindi incrementare/decrementare y
+						if (swap == 1) {
+							y = y + s; 
+						}
+						else{
+							x = x + q;
+						}
+						d = d + 2 * a;
+					}
+					
+					drawP(x, y);
+				}
+			}
+
+			function drawP(x,y){
+				ctx.fillStyle="#FF0000";
+				ctx.fillRect(x, y, dim, dim);
+			}
+
+			function showInitialPoint(x,y){
+				ctx.beginPath();
+				ctx.arc(x, y, dim + 3, 0, 2 * Math.PI, false);
+				ctx.stroke();
+			}
+
+			window.onload=loader;
+		</script>
+    </body>
+</html>
